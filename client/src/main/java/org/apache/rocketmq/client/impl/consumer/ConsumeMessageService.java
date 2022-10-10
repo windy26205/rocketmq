@@ -24,7 +24,7 @@ import org.apache.rocketmq.common.protocol.body.ConsumeMessageDirectlyResult;
 public interface ConsumeMessageService {
     void start();
 
-    void shutdown();
+    void shutdown(long awaitTerminateMillis);
 
     void updateCorePoolSize(int corePoolSize);
 
@@ -41,4 +41,9 @@ public interface ConsumeMessageService {
         final ProcessQueue processQueue,
         final MessageQueue messageQueue,
         final boolean dispathToConsume);
+
+    void submitPopConsumeRequest(
+        final List<MessageExt> msgs,
+        final PopProcessQueue processQueue,
+        final MessageQueue messageQueue);
 }

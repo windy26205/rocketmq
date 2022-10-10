@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-/**
- * $Id: QueueData.java 1835 2013-05-16 02:00:50Z vintagewang@apache.org $
+/*
+  $Id: QueueData.java 1835 2013-05-16 02:00:50Z vintagewang@apache.org $
  */
 package org.apache.rocketmq.common.protocol.route;
 
@@ -25,7 +25,20 @@ public class QueueData implements Comparable<QueueData> {
     private int readQueueNums;
     private int writeQueueNums;
     private int perm;
-    private int topicSynFlag;
+    private int topicSysFlag;
+
+    public QueueData() {
+
+    }
+
+    // Deep copy QueueData
+    public QueueData(QueueData queueData) {
+        this.brokerName = queueData.brokerName;
+        this.readQueueNums = queueData.readQueueNums;
+        this.writeQueueNums = queueData.writeQueueNums;
+        this.perm = queueData.perm;
+        this.topicSysFlag = queueData.topicSysFlag;
+    }
 
     public int getReadQueueNums() {
         return readQueueNums;
@@ -51,12 +64,12 @@ public class QueueData implements Comparable<QueueData> {
         this.perm = perm;
     }
 
-    public int getTopicSynFlag() {
-        return topicSynFlag;
+    public int getTopicSysFlag() {
+        return topicSysFlag;
     }
 
-    public void setTopicSynFlag(int topicSynFlag) {
-        this.topicSynFlag = topicSynFlag;
+    public void setTopicSysFlag(int topicSysFlag) {
+        this.topicSysFlag = topicSysFlag;
     }
 
     @Override
@@ -67,7 +80,7 @@ public class QueueData implements Comparable<QueueData> {
         result = prime * result + perm;
         result = prime * result + readQueueNums;
         result = prime * result + writeQueueNums;
-        result = prime * result + topicSynFlag;
+        result = prime * result + topicSysFlag;
         return result;
     }
 
@@ -91,15 +104,13 @@ public class QueueData implements Comparable<QueueData> {
             return false;
         if (writeQueueNums != other.writeQueueNums)
             return false;
-        if (topicSynFlag != other.topicSynFlag)
-            return false;
-        return true;
+        return topicSysFlag == other.topicSysFlag;
     }
 
     @Override
     public String toString() {
         return "QueueData [brokerName=" + brokerName + ", readQueueNums=" + readQueueNums
-            + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + ", topicSynFlag=" + topicSynFlag
+            + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + ", topicSysFlag=" + topicSysFlag
             + "]";
     }
 

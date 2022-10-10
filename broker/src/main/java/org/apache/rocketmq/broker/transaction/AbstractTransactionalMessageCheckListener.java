@@ -18,6 +18,7 @@ package org.apache.rocketmq.broker.transaction;
 
 import io.netty.channel.Channel;
 import org.apache.rocketmq.broker.BrokerController;
+import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -27,8 +28,8 @@ import org.apache.rocketmq.logging.InternalLoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractTransactionalMessageCheckListener {
@@ -36,14 +37,10 @@ public abstract class AbstractTransactionalMessageCheckListener {
 
     private BrokerController brokerController;
 
-    private static ExecutorService executorService = new ThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2000), new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r);
-            thread.setName("Transaction-msg-check-thread");
-            return thread;
-        }
-    });
+    //queue nums of topic TRANS_CHECK_MAX_TIME_TOPIC
+    protected final static int TCMT_QUEUE_NUMS = 1;
+
+    private static volatile ExecutorService executorService;
 
     public AbstractTransactionalMessageCheckListener() {
     }
@@ -63,7 +60,7 @@ public abstract class AbstractTransactionalMessageCheckListener {
         msgExt.setQueueId(Integer.parseInt(msgExt.getUserProperty(MessageConst.PROPERTY_REAL_QUEUE_ID)));
         msgExt.setStoreSize(0);
         String groupId = msgExt.getProperty(MessageConst.PROPERTY_PRODUCER_GROUP);
-        Channel channel = brokerController.getProducerManager().getAvaliableChannel(groupId);
+        Channel channel = brokerController.getProducerManager().getAvailableChannel(groupId);
         if (channel != null) {
             brokerController.getBroker2Client().checkProducerTransactionState(groupId, channel, checkTransactionStateRequestHeader, msgExt);
         } else {
@@ -72,16 +69,20 @@ public abstract class AbstractTransactionalMessageCheckListener {
     }
 
     public void resolveHalfMsg(final MessageExt msgExt) {
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sendCheckMessage(msgExt);
-                } catch (Exception e) {
-                    LOGGER.error("Send check message error!", e);
+        if (executorService != null) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        sendCheckMessage(msgExt);
+                    } catch (Exception e) {
+                        LOGGER.error("Send check message error!", e);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            LOGGER.error("TransactionalMessageCheckListener not init");
+        }
     }
 
     public BrokerController getBrokerController() {
@@ -89,7 +90,16 @@ public abstract class AbstractTransactionalMessageCheckListener {
     }
 
     public void shutDown() {
-        executorService.shutdown();
+        if (executorService != null) {
+            executorService.shutdown();
+        }
+    }
+
+    public synchronized void initExecutorService() {
+        if (executorService == null) {
+            executorService = new ThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2000),
+                new ThreadFactoryImpl("Transaction-msg-check-thread", brokerController.getBrokerIdentity()), new CallerRunsPolicy());
+        }
     }
 
     /**
@@ -99,6 +109,7 @@ public abstract class AbstractTransactionalMessageCheckListener {
      */
     public void setBrokerController(BrokerController brokerController) {
         this.brokerController = brokerController;
+        initExecutorService();
     }
 
     /**

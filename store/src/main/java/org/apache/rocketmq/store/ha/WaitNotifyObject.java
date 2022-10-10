@@ -39,7 +39,7 @@ public class WaitNotifyObject {
         }
     }
 
-    protected void waitForRunning(long interval) {
+    public void waitForRunning(long interval) {
         synchronized (this) {
             if (this.hasNotified) {
                 this.hasNotified = false;

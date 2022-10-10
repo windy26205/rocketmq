@@ -21,11 +21,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.PullResult;
@@ -40,6 +40,7 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.admin.ConsumeStats;
 import org.apache.rocketmq.common.admin.OffsetWrapper;
+import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
@@ -83,7 +84,7 @@ public class MonitorService {
         try {
             this.defaultMQPushConsumer.setConsumeThreadMin(1);
             this.defaultMQPushConsumer.setConsumeThreadMax(1);
-            this.defaultMQPushConsumer.subscribe(MixAll.OFFSET_MOVED_EVENT, "*");
+            this.defaultMQPushConsumer.subscribe(TopicValidator.RMQ_SYS_OFFSET_MOVED_EVENT, "*");
             this.defaultMQPushConsumer.registerMessageListener(new MessageListenerConcurrently() {
 
                 @Override
@@ -133,9 +134,8 @@ public class MonitorService {
     }
 
     private String instanceName() {
-        String name =
-            System.currentTimeMillis() + new Random().nextInt() + this.monitorConfig.getNamesrvAddr();
-
+        final int randomInteger = RandomUtils.nextInt(0, Integer.MAX_VALUE);
+        String name = System.currentTimeMillis() + randomInteger + this.monitorConfig.getNamesrvAddr();
         return "MonitorService_" + name.hashCode();
     }
 

@@ -22,7 +22,7 @@ public class DispatchRequest {
     private final String topic;
     private final int queueId;
     private final long commitLogOffset;
-    private final int msgSize;
+    private int msgSize;
     private final long tagsCode;
     private final long storeTimestamp;
     private final long consumeQueueOffset;
@@ -34,6 +34,14 @@ public class DispatchRequest {
     private final long preparedTransactionOffset;
     private final Map<String, String> propertiesMap;
     private byte[] bitMap;
+
+    private int bufferSize = -1;//the buffer size maybe larger than the msg size if the message is wrapped by something
+
+    // for batch consume queue
+    private long  msgBaseOffset = -1;
+    private short batchSize = 1;
+
+    private long nextReputFromOffset = -1;
 
     public DispatchRequest(
         final String topic,
@@ -56,6 +64,7 @@ public class DispatchRequest {
         this.tagsCode = tagsCode;
         this.storeTimestamp = storeTimestamp;
         this.consumeQueueOffset = consumeQueueOffset;
+        this.msgBaseOffset = consumeQueueOffset;
         this.keys = keys;
         this.uniqKey = uniqKey;
 
@@ -155,5 +164,55 @@ public class DispatchRequest {
 
     public void setBitMap(byte[] bitMap) {
         this.bitMap = bitMap;
+    }
+
+    public short getBatchSize() {
+        return batchSize;
+    }
+
+    public void setBatchSize(short batchSize) {
+        this.batchSize = batchSize;
+    }
+
+    public void setMsgSize(int msgSize) {
+        this.msgSize = msgSize;
+    }
+
+    public long getMsgBaseOffset() {
+        return msgBaseOffset;
+    }
+
+    public void setMsgBaseOffset(long msgBaseOffset) {
+        this.msgBaseOffset = msgBaseOffset;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
+
+    public long getNextReputFromOffset() {
+        return nextReputFromOffset;
+    }
+
+    public void setNextReputFromOffset(long nextReputFromOffset) {
+        this.nextReputFromOffset = nextReputFromOffset;
+    }
+
+    @Override
+    public String toString() {
+        return "DispatchRequest{" +
+                "topic='" + topic + '\'' +
+                ", queueId=" + queueId +
+                ", commitLogOffset=" + commitLogOffset +
+                ", msgSize=" + msgSize +
+                ", success=" + success +
+                ", msgBaseOffset=" + msgBaseOffset +
+                ", batchSize=" + batchSize +
+                ", nextReputFromOffset=" + nextReputFromOffset +
+            '}';
     }
 }

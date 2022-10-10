@@ -39,8 +39,7 @@ import org.apache.rocketmq.store.QueryMessageResult;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 
 public class QueryMessageProcessor implements NettyRequestProcessor {
-    private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
+    private static final InternalLogger LOGGER = InternalLoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;
 
     public QueryMessageProcessor(final BrokerController brokerController) {
@@ -106,12 +105,12 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
                     public void operationComplete(ChannelFuture future) throws Exception {
                         queryMessageResult.release();
                         if (!future.isSuccess()) {
-                            log.error("transfer query message by page cache failed, ", future.cause());
+                            LOGGER.error("transfer query message by page cache failed, ", future.cause());
                         }
                     }
                 });
             } catch (Throwable e) {
-                log.error("", e);
+                LOGGER.error("", e);
                 queryMessageResult.release();
             }
 
@@ -146,12 +145,12 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
                     public void operationComplete(ChannelFuture future) throws Exception {
                         selectMappedBufferResult.release();
                         if (!future.isSuccess()) {
-                            log.error("Transfer one message from page cache failed, ", future.cause());
+                            LOGGER.error("Transfer one message from page cache failed, ", future.cause());
                         }
                     }
                 });
             } catch (Throwable e) {
-                log.error("", e);
+                LOGGER.error("", e);
                 selectMappedBufferResult.release();
             }
 
